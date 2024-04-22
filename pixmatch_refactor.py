@@ -88,8 +88,8 @@ def Leaderboard(what_to_do): # Esta función se encarga de manejar la creación,
                 leaderboard = dict(
                     sorted(leaderboard.items(), key=lambda item: item[1]['HighestScore'], reverse=True))  # sort desc
 
-                if len(leaderboard) > 3:
-                    for i in range(len(leaderboard) - 3): leaderboard.popitem()  # rmv last kdict ey
+                if len(leaderboard) > 4:
+                    for i in range(len(leaderboard) - 4): leaderboard.popitem()  # rmv last kdict ey
 
                 json.dump(leaderboard, open(vpth + 'leaderboard.json', 'w'))  # write file
 
@@ -101,21 +101,20 @@ def Leaderboard(what_to_do): # Esta función se encarga de manejar la creación,
                 leaderboard = dict(
                     sorted(leaderboard.items(), key=lambda item: item[1]['HighestScore'], reverse=True))  # sort desc
 
-                sc0, sc1, sc2, sc3 = st.columns((2, 3, 3, 3))
+                sc0, sc1, sc2, sc3, sc4 = st.columns((2, 3, 3, 3, 3))
                 rknt = 0
                 for vkey in leaderboard.keys():
                     if leaderboard[vkey]['NameCountry'] != '':
                         rknt += 1
                         if rknt == 1:
                             sc0.write('🏆 Past Winners:')
-                            sc1.write(
-                                f"🥇 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
+                            sc1.write(f"🥇 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
                         elif rknt == 2:
-                            sc2.write(
-                                f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
+                            sc2.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
                         elif rknt == 3:
-                            sc3.write(
-                                f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
+                            sc3.write(f"🥈 | {leaderboard[vkey]['NameCountry']}: :red[{leaderboard[vkey]['HighestScore']}]")
+                        elif rknt == 4:
+                            sc4.write(f"🏅 | {leaderboard[vkey]['NameCountry']}: {leaderboard[vkey]['HighestScore']}")
 
 
 def InitialPage(): # Esta funcion configura y muestra la página inicial con la barra lateral, las instrucciones del juego y las imágenes que aparecen en la pagina.
@@ -170,18 +169,24 @@ def PressedCheck(vcell): # Esta función evalúa y actualiza el estado de un bot
 
         if mystate.plyrbtns[vcell]['eMoji'] == mystate.sidebar_emoji:
             mystate.plyrbtns[vcell]['isTrueFalse'] = True
-            mystate.myscore += 5
-
             if mystate.GameDetails[0] == 'Easy':
                 mystate.myscore += 5
             elif mystate.GameDetails[0] == 'Medium':
                 mystate.myscore += 3
             elif mystate.GameDetails[0] == 'Hard':
                 mystate.myscore += 1
-
         else:
-            mystate.plyrbtns[vcell]['isTrueFalse'] = False
             mystate.myscore -= 1
+            mystate.plyrbtns[vcell]['isTrueFalse'] = False
+            # Contar fallos y verificar si se supera el límite de errores permitidos (50% + 1)
+            total_cells = mystate.GameDetails[2] ** 2
+            max_errors_allowed = (total_cells // 2) + 1
+            current_errors = len([cell for cell in mystate.plyrbtns if not mystate.plyrbtns[cell]['isTrueFalse'] and mystate.plyrbtns[cell]['isPressed']])
+            if current_errors >= max_errors_allowed:
+                st.error("Has superado el número máximo de fallos permitidos.")
+                tm.sleep(5)  # Pausa antes de reiniciar
+                mystate.runpage = Main
+                st.rerun()
 
 
 def ResetBoard(): # Esta función reinicia el tablero del juego actualizando los emojis en los botones y verificando que el emoji si este.
